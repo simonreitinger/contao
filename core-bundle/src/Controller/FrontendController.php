@@ -18,7 +18,6 @@ use Contao\FrontendCron;
 use Contao\FrontendIndex;
 use Contao\FrontendShare;
 use Contao\PageError401;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
@@ -32,7 +31,7 @@ class FrontendController extends AbstractController
 {
     public function indexAction(): Response
     {
-        $this->get('contao.framework')->initialize();
+        $this->initializeContao();
 
         $controller = new FrontendIndex();
 
@@ -44,7 +43,7 @@ class FrontendController extends AbstractController
      */
     public function cronAction(): Response
     {
-        $this->get('contao.framework')->initialize();
+        $this->initializeContao();
 
         $controller = new FrontendCron();
 
@@ -56,7 +55,7 @@ class FrontendController extends AbstractController
      */
     public function shareAction(): RedirectResponse
     {
-        $this->get('contao.framework')->initialize();
+        $this->initializeContao();
 
         $controller = new FrontendShare();
 
@@ -72,7 +71,7 @@ class FrontendController extends AbstractController
      */
     public function loginAction(): Response
     {
-        $this->get('contao.framework')->initialize();
+        $this->initializeContao();
 
         if (!isset($GLOBALS['TL_PTY']['error_401']) || !class_exists($GLOBALS['TL_PTY']['error_401'])) {
             throw new UnauthorizedHttpException('', 'Not authorized');
@@ -133,7 +132,7 @@ class FrontendController extends AbstractController
      */
     public function twoFactorAuthenticationAction(): Response
     {
-        $this->get('contao.framework')->initialize();
+        $this->initializeContao();
 
         if (!isset($GLOBALS['TL_PTY']['error_401']) || !class_exists($GLOBALS['TL_PTY']['error_401'])) {
             throw new UnauthorizedHttpException('', 'Not authorized');

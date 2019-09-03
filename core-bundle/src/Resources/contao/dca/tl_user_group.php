@@ -151,7 +151,7 @@ $GLOBALS['TL_DCA']['tl_user_group'] = array
 			'exclude'                 => true,
 			'filter'                  => true,
 			'inputType'               => 'checkbox',
-			'options_callback'        => array('tl_user_group', 'getFormFields'),
+			'options'                 => array_keys($GLOBALS['TL_FFL']),
 			'reference'               => &$GLOBALS['TL_LANG']['FFL'],
 			'eval'                    => array('multiple'=>true, 'helpwizard'=>true),
 			'sql'                     => "blob NULL"
@@ -373,16 +373,6 @@ class tl_user_group extends Contao\Backend
 		}
 
 		return $groups;
-	}
-
-	/**
-	 * Return all form fields
-	 *
-	 * @return array
-	 */
-	public function getFormFields()
-	{
-		return array_keys($GLOBALS['TL_FFL']);
 	}
 
 	/**

@@ -28,6 +28,7 @@ use Contao\CoreBundle\Controller\BackendCsvImportController;
 use Contao\CoreBundle\Controller\FrontendModule\TwoFactorController;
 use Contao\CoreBundle\Controller\InsertTagsController;
 use Contao\CoreBundle\Cors\WebsiteRootsConfigProvider;
+use Contao\CoreBundle\Cron\Cron;
 use Contao\CoreBundle\Csrf\MemoryTokenStorage;
 use Contao\CoreBundle\DataCollector\ContaoDataCollector;
 use Contao\CoreBundle\DependencyInjection\ContaoCoreExtension;
@@ -370,7 +371,8 @@ class ContaoCoreExtensionTest extends TestCase
         $this->assertTrue($definition->isPrivate());
         $this->assertSame('contao.framework', (string) $definition->getArgument(0));
         $this->assertSame('database_connection', (string) $definition->getArgument(1));
-        $this->assertSame('%fragment.path%', (string) $definition->getArgument(2));
+        $this->assertSame(Cron::class, (string) $definition->getArgument(2));
+        $this->assertSame('%fragment.path%', (string) $definition->getArgument(3));
 
         $tags = $definition->getTags();
 

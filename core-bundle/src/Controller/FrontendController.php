@@ -45,7 +45,7 @@ class FrontendController extends AbstractController
      */
     public function cronAction(Request $request, Cron $cron): Response
     {
-        if ($request->isMethod('get')) {
+        if ($request->isMethod(Request::METHOD_GET)) {
             $cron->run();
         }
 

@@ -44,7 +44,7 @@ class Cron
      */
     private $crons = [];
 
-    public function __construct(Connection $db, bool $debug, LoggerInterface $logger = null)
+    public function __construct(Connection $db, bool $debug = false, LoggerInterface $logger = null)
     {
         $this->db = $db;
         $this->debug = $debug;

@@ -12,10 +12,8 @@ declare(strict_types=1);
 
 namespace Contao\CoreBundle\Cron;
 
-use Contao\CoreBundle\Monolog\ContaoContext;
 use Doctrine\DBAL\Connection;
 use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
 
 class Cron
 {
@@ -27,27 +25,21 @@ class Cron
     /**
      * @var Connection
      */
-    protected $db;
+    private $db;
 
     /**
      * @var LoggerInterface
      */
-    protected $logger;
-
-    /**
-     * @var bool
-     */
-    protected $debug;
+    private $logger;
 
     /**
      * @var array
      */
-    protected $crons = [];
+    private $crons = [];
 
-    public function __construct(Connection $db, bool $debug = false, LoggerInterface $logger = null)
+    public function __construct(Connection $db, LoggerInterface $logger = null)
     {
         $this->db = $db;
-        $this->debug = $debug;
         $this->logger = $logger;
     }
 
@@ -68,12 +60,12 @@ class Cron
     /**
      * Run the registered Contao cron jobs.
      *
-     * @param bool $cliOnly Whether the cli only crons should be run.
+     * @param bool $cliOnly whether the cli only crons should be run
      */
     public function run(bool $cliOnly = false): void
     {
         // Do not run if the last execution was less than a minute ago
-        if ($this->hasToWait()) {
+        if ($this->hasToWait($this->getCronTimeout())) {
             return;
         }
 
@@ -116,8 +108,8 @@ class Cron
             $this->db->update('tl_cron', ['value' => $currentTimestamp], ['name' => $interval]);
 
             // Add a log entry if in debug mode (see #4729)
-            if ($this->debug && null !== $this->logger) {
-                $this->logger->log(LogLevel::INFO, 'Running the '.$interval.' cron jobs', ['contao' => new ContaoContext(__METHOD__, TL_CRON)]);
+            if (null !== $this->logger) {
+                $this->logger->debug('Running the '.$interval.' cron jobs');
             }
 
             // Sort the cron jobs by priority
@@ -128,21 +120,26 @@ class Cron
             foreach ($crons as $cron) {
                 // Skip jobs that are only to be run on CLI, when not run via CLI
                 if (!$cliOnly && isset($cron[2]) && true === $cron[2]) {
+                    $this->logger->debug('Skipping command line only '.$interval.' cron job "'.\get_class($cron[0]).'::'.$cron[1].'"');
                     continue;
                 }
 
-                $cron[0]->{$cron[1]}();
+                if (method_exists($cron[0], $cron[1])) {
+                    $cron[0]->{$cron[1]}();
+                } elseif (null !== $this->logger) {
+                    $this->logger->critical('Cron job method "'.\get_class($cron[0]).'::'.$cron[1].'" does not exist!');
+                }
             }
 
             // Add a log entry if in debug mode (see #4729)
-            if ($this->debug && null !== $this->logger) {
-                $this->logger->log(LogLevel::INFO, ucfirst($interval).' cron jobs complete', ['contao' => new ContaoContext(__METHOD__, TL_CRON)]);
+            if (null !== $this->logger) {
+                $this->logger->debug(ucfirst($interval).' cron jobs complete');
             }
         }
     }
 
     /**
-     * Check whether the last cron execution was less than a minute ago.
+     * Check whether the last cron execution was less than the given timeout.
      */
     private function hasToWait(int $cronTimeout = 60): bool
     {
@@ -172,5 +169,21 @@ class Cron
         $this->db->exec('UNLOCK TABLES');
 
         return $return;
+    }
+
+    /**
+     * Returns the minimum timeout necessary for the cron according to the registered cron jobs.
+     */
+    private function getCronTimeout(): int
+    {
+        if (!empty($this->crons['minutely'])) {
+            return 60;
+        }
+
+        if (!empty($this->crons['hourly'])) {
+            return 3600;
+        }
+
+        return 86400;
     }
 }
